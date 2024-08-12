@@ -462,10 +462,8 @@ int main()
                     struct Tile * current_tile;
                     while (current->next)
                         current = current->next;
-                    while (current->previous)
                     for (;;) 
                     {
-
                         current_tile = ((struct Tile *)(current->var));
 
                         if ((current_tile->x == (x+player.x-480)/64) && (current_tile->y == (y+player.y-480)/64))
@@ -486,6 +484,7 @@ int main()
                                 current = current->previous;
                                 List_delete(current->next);
                             }
+                            break;
                         }
 
                         if (current->previous)
