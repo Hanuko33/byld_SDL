@@ -38,6 +38,8 @@ SDL_Texture* playerl_texture;
 enum tiles current_tile = 0;
 SDL_Texture* tile_sheet;
 
+SDL_Texture* im_select_texture;
+
 struct Tile
 {
     int x;
@@ -244,8 +246,7 @@ void draw()
         SDL_RenderCopy(renderer, tile_sheet, &src_rect, &img_rect);
     }
     SDL_Rect img_rect = {current_tile*32+200, 10, 32, 32};
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    SDL_RenderDrawRect(renderer, &img_rect);
+    SDL_RenderCopy(renderer, im_select_texture, NULL, &img_rect);
 
     // current tile draw
     sprintf(text, "Current tile: ");
@@ -417,6 +418,7 @@ int main()
     playerr_texture = load_texture("textures/playerr.png");
     playerl_texture = load_texture("textures/playerl.png");
     tile_sheet = load_texture("textures/terrain.png");
+    im_select_texture = load_texture("textures/select.png");
 
     Uint32 lt = 0;
     Uint32 ct = 0;
@@ -441,6 +443,7 @@ int main()
                 switch (event.key.keysym.sym)
                 {
                     case SDLK_ESCAPE:
+                        save();
                         SDL_Quit();
                         return 0;
                     case SDLK_x:
