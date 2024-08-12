@@ -6,6 +6,7 @@
 #include <SDL2/SDL_rect.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_scancode.h>
+#include <SDL2/SDL_timer.h>
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
@@ -17,6 +18,7 @@
 #include "rect.h"
 
 int debug = 0;
+int fps = 0;
 
 SDL_Window *window;
 SDL_Renderer *renderer;
@@ -214,6 +216,10 @@ void draw()
     // Text draw
     char text[256];
     int text_y=16;
+
+    sprintf(text, "FPS: %d", fps);
+    write_text(10, text_y, text, (SDL_Color){255,255,255,255}, 20, window, renderer);
+    text_y+=16;
     
     sprintf(text, "X: %d (%d)", player.x, player.x/64);
     write_text(10, text_y, text, (SDL_Color){255,255,255,255}, 20, window, renderer);
@@ -412,8 +418,15 @@ int main()
     playerl_texture = load_texture("textures/playerl.png");
     tile_sheet = load_texture("textures/terrain.png");
 
+    Uint32 lt = 0;
+    Uint32 ct = 0;
+    int fc = 0;
+
     for (;;)
     {
+        ct = SDL_GetTicks();
+        fc++;
+
         // Keyboard handling by events
         SDL_Event event;
         while (SDL_PollEvent(&event))
@@ -514,13 +527,18 @@ int main()
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
         
+        if (ct > lt + 1000) {
+            fps = fc;
+            fc = 0;
+            lt = ct;
+        }
+
         // Keyboard handling by states
         const Uint8 * keys = SDL_GetKeyboardState(NULL);
         update(keys);
         draw();
 
         SDL_RenderPresent(renderer);
-        SDL_Delay(1000 / 60);
     }
 }
 
