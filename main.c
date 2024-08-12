@@ -58,7 +58,7 @@ char tile_solid[] = {
     0, // TILE_dirt
 };
 
-SDL_Texture* tile_textures[TILE_max];
+SDL_Texture* tile_sheet;
 
 struct Tile
 {
@@ -197,6 +197,7 @@ void draw()
     if (world->var)
     {
         SDL_Rect img_rect = {};
+        SDL_Rect src_rect = {};
         struct List * current = world;
         struct Tile * current_tile;
         for (;;) {
@@ -205,7 +206,9 @@ void draw()
             img_rect.y=current_tile->y*64-player.y+480;
             img_rect.w=64;
             img_rect.h=64;
-            SDL_RenderCopy(renderer, tile_textures[current_tile->id], NULL, &img_rect);
+
+            src_rect = (SDL_Rect){32*current_tile->id, 0, 32, 32};
+            SDL_RenderCopy(renderer, tile_sheet, &src_rect, &img_rect);
 
             if (current->next)
                 current=current->next;
@@ -246,7 +249,8 @@ void draw()
     // Item menu draw
     for (int i = 0; i < TILE_max; i++) {
         SDL_Rect img_rect = {i*32+200, 10, 32, 32};
-        SDL_RenderCopy(renderer, tile_textures[i], NULL, &img_rect);
+        SDL_Rect src_rect = (SDL_Rect){32*i, 0, 32, 32};
+        SDL_RenderCopy(renderer, tile_sheet, &src_rect, &img_rect);
     }
     SDL_Rect img_rect = {current_tile*32+200, 10, 32, 32};
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
@@ -256,7 +260,8 @@ void draw()
     sprintf(text, "Current tile: ");
     write_text(10, 100, text, (SDL_Color){255,255,255,255}, 20, window, renderer);
     img_rect = (SDL_Rect){150, 100, 32, 32};
-    SDL_RenderCopy(renderer, tile_textures[current_tile], NULL, &img_rect);
+    SDL_Rect src_rect = (SDL_Rect){32*current_tile, 0, 32, 32};
+    SDL_RenderCopy(renderer, tile_sheet, &src_rect, &img_rect);
 }
 
 enum Collision_id
@@ -420,15 +425,7 @@ int main()
     load_font();
     playerr_texture = load_texture("textures/playerr.png");
     playerl_texture = load_texture("textures/playerl.png");
-    tile_textures[TILE_blue_wall] = load_texture("textures/blue_wall.png");
-    tile_textures[TILE_red_wall] = load_texture("textures/red_wall.png");
-    tile_textures[TILE_pink_wall] = load_texture("textures/pink_wall.png");
-    tile_textures[TILE_green_wall] = load_texture("textures/green_wall.png");
-    tile_textures[TILE_orange_wall] = load_texture("textures/orange_wall.png");
-    tile_textures[TILE_violet_wall] = load_texture("textures/violet_wall.png");
-    tile_textures[TILE_yellow_wall] = load_texture("textures/yellow_wall.png");
-    tile_textures[TILE_flower] = load_texture("textures/flower.png");
-    tile_textures[TILE_dirt] = load_texture("textures/dirt.png");
+    tile_sheet = load_texture("textures/terrain.png");
 
     for (;;)
     {
