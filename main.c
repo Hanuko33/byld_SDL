@@ -194,38 +194,6 @@ void draw()
     else
         SDL_RenderCopy(renderer, playerl_texture, NULL, &player_rect);
 
-    if (debug)
-    {
-        SDL_Rect collision_rect = player_rect;
-        collision_rect.x += 28;
-        collision_rect.w = 4;
-        collision_rect.y += 60;
-        collision_rect.h = 4;
-        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-        SDL_RenderDrawRect(renderer, &collision_rect);
-
-        collision_rect = player_rect;
-        collision_rect.x +=28;
-        collision_rect.w = 4;
-        collision_rect.y -= 5;
-        collision_rect.h = 4;
-        SDL_RenderDrawRect(renderer, &collision_rect);
-
-        collision_rect = player_rect;
-        collision_rect.y += 3;
-        collision_rect.h = 29;
-        collision_rect.x +=30;
-        collision_rect.w = 2;
-        SDL_RenderDrawRect(renderer, &collision_rect);
-
-        collision_rect = player_rect;
-        collision_rect.y += 3;
-        collision_rect.h = 29;
-        collision_rect.x +=28;
-        collision_rect.w = 2;
-        SDL_RenderDrawRect(renderer, &collision_rect);
-    }
-
     // Tile draw
     if (world->var)
     {
@@ -316,7 +284,7 @@ enum Collision_id get_collision(SDL_Rect o1, SDL_Rect o2, enum Collision_id filt
 
     if ((in_between(o1.y+3, o2.y) || in_between(o1.y+50, o2.y)) && (filter == COLL_right || filter == COLL_no))
     {
-        if (o1.x+32 >= o2.x && o1.x <= o2.x)
+        if (o1.x+40 >= o2.x && o1.x <= o2.x)
         {
             return COLL_right;
         }
