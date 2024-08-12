@@ -4,6 +4,7 @@
 #include <SDL2/SDL_mouse.h>
 #include <SDL2/SDL_rect.h>
 #include <SDL2/SDL_render.h>
+#include <SDL2/SDL_scancode.h>
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
@@ -18,12 +19,11 @@ SDL_Window *window;
 SDL_Renderer *renderer;
 struct Player
 {
-    int coins;
+    char going_right;
+    char no_clip;
     int x;
     int y;
-    float y_velocity;
-    char going_right;
-    char on_ground;
+    int speed;
 };
 
 struct Player player;
@@ -33,7 +33,6 @@ SDL_Texture* playerl_texture;
 enum tiles
 {
     TILE_wall,
-    TILE_collectible,
     TILE_max
 };
 
@@ -141,10 +140,8 @@ void save()
 
 void load()
 {
-    player.on_ground=1;
-    player.x=0;
-    player.y=0;
-    player.y_velocity=0;
+    player.x=2110;
+    player.y=2110;
     FILE * f = fopen("world", "r");
     int x,y,id;
 
@@ -223,12 +220,13 @@ void draw()
     write_text(10, text_y, text, (SDL_Color){255,255,255,255}, 20, window, renderer);
     text_y+=16;
 
-    sprintf(text, "coins: %d", player.coins);
+    sprintf(text, "No clip: %s", player.no_clip ? "YES" : "NO" );
     write_text(10, text_y, text, (SDL_Color){255,255,255,255}, 20, window, renderer);
     text_y+=16;
-    
-    sprintf(text, "On ground: %d", player.on_ground);
+
+    sprintf(text, "Speed: %s", player.speed==20 ? "2" : player.speed==10 ? "1" : "0.5" );
     write_text(10, text_y, text, (SDL_Color){255,255,255,255}, 20, window, renderer);
+    text_y+=16;
 
     // Tile draw
     if (world->var)
@@ -270,15 +268,15 @@ int in_between(int a, int min)
 int arst=0;
 enum Collision_id get_collision(SDL_Rect o1, SDL_Rect o2, enum Collision_id filter)
 {
-    if ((in_between(o1.x+28, o2.x) || in_between(o1.x+32, o2.x)) && (filter == COLL_down || filter == COLL_no))
+    if ((in_between(o1.x+32, o2.x) || in_between(o1.x+32, o2.x)) && (filter == COLL_down || filter == COLL_no))
     {
-        if (in_between(o1.y+64, o2.y))
+        if (in_between(o1.y+60, o2.y))
             return COLL_down;
     }
 
-    if ((in_between(o1.x+28, o2.x) || in_between(o1.x+32, o2.x)) && (filter == COLL_up || filter == COLL_no))
+    if ((in_between(o1.x+32, o2.x) || in_between(o1.x+32, o2.x)) && (filter == COLL_up || filter == COLL_no))
     {
-        if (in_between(o1.y-5, o2.y))
+        if (in_between(o1.y-4, o2.y))
             return COLL_up;
     }
 
@@ -362,69 +360,48 @@ struct List * player_tile_collision(enum Collision_id id, enum tiles Tile_ID)
 
 void update(const Uint8 * keys)
 {
-    if (player_tile_collision(COLL_no, TILE_collectible))
-    {
-        List_delete(player_tile_collision(COLL_no, TILE_collectible));
-        player.coins++;
-    }
-    player.on_ground = player_check_tile_collision(COLL_down);
+    if (keys[SDL_SCANCODE_LSHIFT])
+        player.speed = 5;
+    else if (keys[SDL_SCANCODE_LCTRL])
+        player.speed = 20;
+    else
+        player.speed = 10;
 
-    if (player_check_tile_collision(COLL_down))
-    {
-        player.y_velocity = -1;
-    }
 
     if (keys[SDL_SCANCODE_D])
     {
         player.going_right = 1;
-        player.x += 10;
+        player.x += player.speed;
     }
-    if (player_check_tile_collision(COLL_right))
-    {
-        player.x -= 10;
-    }
+
     if (keys[SDL_SCANCODE_A])
     {
         player.going_right = 0;
-        player.x -= 10;
+        player.x -= player.speed;
     }
-    if (player_check_tile_collision(COLL_left))
+    if (keys[SDL_SCANCODE_W])
+        player.y -= player.speed;
+    if (keys[SDL_SCANCODE_S])
+        player.y += player.speed;
+
+
+    if (!player.no_clip)
     {
-        player.x += 10;
+        if (player_check_tile_collision(COLL_down))
+            player.y -= player.speed;
+        if (player_check_tile_collision(COLL_right))
+            player.x -= player.speed;
+        if (player_check_tile_collision(COLL_up))
+            player.y += player.speed;
+        if (player_check_tile_collision(COLL_left))
+            player.x += player.speed;
     }
-    
-
-    if (keys[SDL_SCANCODE_Z])
-    {
-        player.y+= 10;
-    }
-
-
-    if (!player.on_ground)
-        player.y_velocity += 0.5;
-    else
-        player.y_velocity = 0;
-
-    if (player_check_tile_collision(COLL_up))
-        player.y_velocity = 1;
-
-    if (keys[SDL_SCANCODE_SPACE] && player.on_ground)
-    {
-        player.on_ground=0;
-        player.y_velocity = -15;
-    }
-
-    player.y+=(int)(player.y_velocity);
 }
 
 int main()
 {
+    player.no_clip=0;
     load();
-
-    player.on_ground=1;
-    player.x=0;
-    player.y=0;
-    player.y_velocity=0;
 
     if (init_sdl2() != 0)
     {
@@ -435,7 +412,6 @@ int main()
     playerr_texture = load_texture("textures/playerr.png");
     playerl_texture = load_texture("textures/playerl.png");
     tile_textures[TILE_wall] = load_texture("textures/wall.png");
-    tile_textures[TILE_collectible] = load_texture("textures/coin.png");
 
     for (;;)
     {
@@ -455,6 +431,9 @@ int main()
                     case SDLK_ESCAPE:
                         SDL_Quit();
                         return 0;
+                    case SDLK_x:
+                        player.no_clip ^= 1;
+                        break;
                     case SDLK_F1:
                         debug ^= 1;
                         break;
@@ -477,14 +456,6 @@ int main()
                                         (x+player.x-480)/64,
                                         (y+player.y-480)/64,
                                     TILE_wall));
-                }
-                if (event.button.button == 2)
-                {
-                    List_append(world,
-                                Tile_create(
-                                        (x+player.x-480)/64,
-                                        (y+player.y-480)/64,
-                                    TILE_collectible));
                 }
                 if (event.button.button == 3)
                 {
