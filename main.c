@@ -2,6 +2,7 @@
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_keycode.h>
 #include <SDL2/SDL_mouse.h>
+#include <SDL2/SDL_pixels.h>
 #include <SDL2/SDL_rect.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_scancode.h>
@@ -13,6 +14,7 @@
 #include "text.h"
 #include "list/list.h"
 #include "world.h"
+#include "rect.h"
 
 int debug = 0;
 
@@ -202,6 +204,12 @@ void draw()
         SDL_RenderCopy(renderer, playerl_texture, NULL, &player_rect);
 
     // GUI
+    // Background draw
+    draw_rectangle(renderer, 0, 0, 600, 150,
+                   (SDL_Color){0, 0, 155},
+                   (SDL_Color){0, 155, 0},
+                   (SDL_Color){55, 155, 155},
+                   (SDL_Color){0, 0, 0});
 
     // Text draw
     char text[256];
