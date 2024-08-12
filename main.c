@@ -79,7 +79,7 @@ SDL_Texture* load_texture(const char * texture_name)
 
 int init_sdl2()
 {
-    window = SDL_CreateWindow("Platforer", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1024, 1024, SDL_WINDOW_SHOWN);
+    window = SDL_CreateWindow("Platforer", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1024, 1024, SDL_WINDOW_SHOWN|SDL_WINDOW_RESIZABLE);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
@@ -165,6 +165,9 @@ void load()
 
 void draw()
 {
+
+    int win_h,win_w;
+    SDL_GetWindowSize(window, &win_w, &win_h);
     // GAME
 
     // Tile draw
@@ -176,8 +179,8 @@ void draw()
         struct Tile * current_tile;
         for (;;) {
             current_tile = ((struct Tile *)(current->var));
-            img_rect.x=current_tile->x*64-player.x+480;
-            img_rect.y=current_tile->y*64-player.y+480;
+            img_rect.x=current_tile->x*64-player.x+(win_w/2-32);
+            img_rect.y=current_tile->y*64-player.y+(win_h/2-32);
             img_rect.w=64;
             img_rect.h=64;
 
@@ -192,7 +195,7 @@ void draw()
     }
 
     // Player draw
-    SDL_Rect player_rect = {480, 480, 64, 64};
+    SDL_Rect player_rect = {win_w/2-32, win_h/2-32, 64, 64};
     if (player.going_right)
         SDL_RenderCopy(renderer, playerr_texture, NULL, &player_rect);
     else
@@ -448,25 +451,28 @@ int main()
             {
                 int x, y;
                 SDL_GetMouseState(&x, &y);
+                int win_h, win_w;
+                SDL_GetWindowSize(window, &win_w, &win_h);
                 if (event.button.button == 1)
                 {
                     List_append(world,
                                 Tile_create(
-                                        (x+player.x-480)/64,
-                                        (y+player.y-480)/64,
+                                        (x+player.x-(win_w/2-32))/64,
+                                        (y+player.y-(win_h/2-32))/64,
                                     current_tile));
                 }
                 if (event.button.button == 3)
                 {
                     struct List * current = world;
                     struct Tile * current_tile;
+
                     while (current->next)
                         current = current->next;
                     for (;;) 
                     {
                         current_tile = ((struct Tile *)(current->var));
 
-                        if ((current_tile->x == (x+player.x-480)/64) && (current_tile->y == (y+player.y-480)/64))
+                        if ((current_tile->x == (x+player.x-(win_w/2-32))/64) && (current_tile->y == (y+player.y-(win_h/2-32))/64))
                         {
                             if (current == world)
                             {
