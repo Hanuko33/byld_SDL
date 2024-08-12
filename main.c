@@ -32,8 +32,26 @@ SDL_Texture* playerl_texture;
 
 enum tiles
 {
-    TILE_wall,
+    TILE_blue_wall,
+    TILE_green_wall,
+    TILE_orange_wall,
+    TILE_pink_wall,
+    TILE_red_wall,
+    TILE_violet_wall,
+    TILE_yellow_wall,
     TILE_max
+};
+
+enum tiles current_tile = TILE_blue_wall;
+
+char tile_solid[] = {
+    1, // TILE_blue_wall
+    1, // TILE_green_wall
+    1, // TILE_orange_wall
+    1, // TILE_pink_wall
+    1, // TILE_red_wall
+    1, // TILE_violet_wall
+    1, // TILE_yellow_wall
 };
 
 SDL_Texture* tile_textures[TILE_max];
@@ -208,26 +226,6 @@ void draw()
         SDL_RenderDrawRect(renderer, &collision_rect);
     }
 
-    // Text draw
-    char text[256];
-    int text_y=16;
-    
-    sprintf(text, "X: %d (%d)", player.x, player.x/64);
-    write_text(10, text_y, text, (SDL_Color){255,255,255,255}, 20, window, renderer);
-    text_y+=16;
-
-    sprintf(text, "Y: %d (%d)", player.y, player.y/64);
-    write_text(10, text_y, text, (SDL_Color){255,255,255,255}, 20, window, renderer);
-    text_y+=16;
-
-    sprintf(text, "No clip: %s", player.no_clip ? "YES" : "NO" );
-    write_text(10, text_y, text, (SDL_Color){255,255,255,255}, 20, window, renderer);
-    text_y+=16;
-
-    sprintf(text, "Speed: %s", player.speed==20 ? "2" : player.speed==10 ? "1" : "0.5" );
-    write_text(10, text_y, text, (SDL_Color){255,255,255,255}, 20, window, renderer);
-    text_y+=16;
-
     // Tile draw
     if (world->var)
     {
@@ -248,6 +246,42 @@ void draw()
                 break;
         }
     }
+    // Text draw
+    char text[256];
+    int text_y=16;
+    
+    sprintf(text, "X: %d (%d)", player.x, player.x/64);
+    write_text(10, text_y, text, (SDL_Color){255,255,255,255}, 20, window, renderer);
+    text_y+=16;
+
+    sprintf(text, "Y: %d (%d)", player.y, player.y/64);
+    write_text(10, text_y, text, (SDL_Color){255,255,255,255}, 20, window, renderer);
+    text_y+=16;
+
+    sprintf(text, "No clip: %s", player.no_clip ? "YES" : "NO" );
+    write_text(10, text_y, text, (SDL_Color){255,255,255,255}, 20, window, renderer);
+    text_y+=16;
+
+    sprintf(text, "Speed: %s", player.speed==20 ? "2" : player.speed==10 ? "1" : "0.5" );
+    write_text(10, text_y, text, (SDL_Color){255,255,255,255}, 20, window, renderer);
+    text_y+=16;
+
+
+
+    // Item menu draw
+    for (int i = 0; i < TILE_max; i++) {
+        SDL_Rect img_rect = {i*32+200, 10, 32, 32};
+        SDL_RenderCopy(renderer, tile_textures[i], NULL, &img_rect);
+    }
+    SDL_Rect img_rect = {current_tile*32+200, 10, 32, 32};
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_RenderDrawRect(renderer, &img_rect);
+
+    // current tile draw
+    sprintf(text, "Current tile: ");
+    write_text(10, 100, text, (SDL_Color){255,255,255,255}, 20, window, renderer);
+    img_rect = (SDL_Rect){150, 100, 32, 32};
+    SDL_RenderCopy(renderer, tile_textures[current_tile], NULL, &img_rect);
 }
 
 enum Collision_id
@@ -307,7 +341,7 @@ int player_check_tile_collision(enum Collision_id id)
         struct Tile * current_tile;
         for (;;) {
             current_tile = ((struct Tile *)(current->var));
-            if (current_tile->id == TILE_wall && get_collision
+            if (tile_solid[current_tile->id] && get_collision
                 (
                     (SDL_Rect){player.x, player.y, 64, 64},
                     (SDL_Rect){current_tile->x*64, current_tile->y*64, 64, 64},
@@ -411,7 +445,13 @@ int main()
     load_font();
     playerr_texture = load_texture("textures/playerr.png");
     playerl_texture = load_texture("textures/playerl.png");
-    tile_textures[TILE_wall] = load_texture("textures/wall.png");
+    tile_textures[TILE_blue_wall] = load_texture("textures/blue_wall.png");
+    tile_textures[TILE_red_wall] = load_texture("textures/red_wall.png");
+    tile_textures[TILE_pink_wall] = load_texture("textures/pink_wall.png");
+    tile_textures[TILE_green_wall] = load_texture("textures/green_wall.png");
+    tile_textures[TILE_orange_wall] = load_texture("textures/orange_wall.png");
+    tile_textures[TILE_violet_wall] = load_texture("textures/violet_wall.png");
+    tile_textures[TILE_yellow_wall] = load_texture("textures/yellow_wall.png");
 
     for (;;)
     {
@@ -443,6 +483,16 @@ int main()
                     case SDLK_F3:
                         load();
                         break;
+                    case SDLK_COMMA:
+                        current_tile--;
+                        if (current_tile==-1)
+                            current_tile=TILE_max-1;
+                        break;
+                    case SDLK_PERIOD:
+                        current_tile++;
+                        if (current_tile==TILE_max)
+                            current_tile = 0;
+                        break;
                 }
             }
             if (event.type == SDL_MOUSEBUTTONDOWN)
@@ -455,7 +505,7 @@ int main()
                                 Tile_create(
                                         (x+player.x-480)/64,
                                         (y+player.y-480)/64,
-                                    TILE_wall));
+                                    current_tile));
                 }
                 if (event.button.button == 3)
                 {
