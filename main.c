@@ -39,6 +39,8 @@ enum tiles
     TILE_red_wall,
     TILE_violet_wall,
     TILE_yellow_wall,
+    TILE_flower,
+    TILE_dirt,
     TILE_max
 };
 
@@ -52,6 +54,8 @@ char tile_solid[] = {
     1, // TILE_red_wall
     1, // TILE_violet_wall
     1, // TILE_yellow_wall
+    0, // TILE_flower
+    0, // TILE_dirt
 };
 
 SDL_Texture* tile_textures[TILE_max];
@@ -187,12 +191,7 @@ void load()
 
 void draw()
 {
-    // Player draw
-    SDL_Rect player_rect = {480, 480, 64, 64};
-    if (player.going_right)
-        SDL_RenderCopy(renderer, playerr_texture, NULL, &player_rect);
-    else
-        SDL_RenderCopy(renderer, playerl_texture, NULL, &player_rect);
+    // GAME
 
     // Tile draw
     if (world->var)
@@ -214,6 +213,16 @@ void draw()
                 break;
         }
     }
+
+    // Player draw
+    SDL_Rect player_rect = {480, 480, 64, 64};
+    if (player.going_right)
+        SDL_RenderCopy(renderer, playerr_texture, NULL, &player_rect);
+    else
+        SDL_RenderCopy(renderer, playerl_texture, NULL, &player_rect);
+
+    // GUI
+
     // Text draw
     char text[256];
     int text_y=16;
@@ -233,8 +242,6 @@ void draw()
     sprintf(text, "Speed: %s", player.speed==20 ? "2" : player.speed==10 ? "1" : "0.5" );
     write_text(10, text_y, text, (SDL_Color){255,255,255,255}, 20, window, renderer);
     text_y+=16;
-
-
 
     // Item menu draw
     for (int i = 0; i < TILE_max; i++) {
@@ -420,6 +427,8 @@ int main()
     tile_textures[TILE_orange_wall] = load_texture("textures/orange_wall.png");
     tile_textures[TILE_violet_wall] = load_texture("textures/violet_wall.png");
     tile_textures[TILE_yellow_wall] = load_texture("textures/yellow_wall.png");
+    tile_textures[TILE_flower] = load_texture("textures/flower.png");
+    tile_textures[TILE_dirt] = load_texture("textures/dirt.png");
 
     for (;;)
     {
@@ -457,6 +466,7 @@ int main()
                             current_tile=TILE_max-1;
                         break;
                     case SDLK_PERIOD:
+                    case SDLK_TAB:
                         current_tile++;
                         if (current_tile==TILE_max)
                             current_tile = 0;
@@ -479,8 +489,12 @@ int main()
                 {
                     struct List * current = world;
                     struct Tile * current_tile;
+                    while (current->next)
+                        current = current->next;
+                    while (current->previous)
                     for (;;) 
                     {
+
                         current_tile = ((struct Tile *)(current->var));
 
                         if ((current_tile->x == (x+player.x-480)/64) && (current_tile->y == (y+player.y-480)/64))
@@ -503,8 +517,8 @@ int main()
                             }
                         }
 
-                        if (current->next)
-                            current=current->next;
+                        if (current->previous)
+                            current=current->previous;
                         else
                             break;
                     }
