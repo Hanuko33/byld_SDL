@@ -2,7 +2,11 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <errno.h>
+#ifdef ANDROID
+#include <SDL_ttf.h>
+#else
 #include <SDL2/SDL_ttf.h>
+#endif
 
 TTF_Font* font;
 
@@ -14,17 +18,15 @@ int status_code;
 
 int load_font()
 {
-    struct stat statbuf;
-    int ret;
-    ret = stat(FONT_NAME, &statbuf);
-    if (ret) 
-    {
-        printf("load_font(%s): %s\n", FONT_NAME, strerror(errno));
-        return 1;
-    }
     font = TTF_OpenFont(FONT_NAME, 128);
-    if (!(font)) return 1;
-    else return 0;
+    if (!(font)) {
+        return 1;
+        SDL_Log("problem with font");
+    }
+    else {
+        SDL_Log("font loaded");
+        return 0;
+    }
 }
 
 void write_text(int x, int y, const char * text, SDL_Color color, int scale, SDL_Window* window, SDL_Renderer* renderer)

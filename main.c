@@ -1,15 +1,21 @@
+#ifdef ANDROID
+#include <SDL.h>
+#include <SDL_events.h>
+#include <SDL_keycode.h>
+#include <SDL_mouse.h>
+#include <SDL_pixels.h>
+#include <SDL_rect.h>
+#include <SDL_render.h>
+#include <SDL_scancode.h>
+#include <SDL_timer.h>
+#include <SDL_video.h>
+#include <SDL_image.h>
+#include <SDL_ttf.h>
+#else
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_events.h>
-#include <SDL2/SDL_keycode.h>
-#include <SDL2/SDL_mouse.h>
-#include <SDL2/SDL_pixels.h>
-#include <SDL2/SDL_rect.h>
-#include <SDL2/SDL_render.h>
-#include <SDL2/SDL_scancode.h>
-#include <SDL2/SDL_timer.h>
-#include <SDL2/SDL_video.h>
-#include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_image.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include "text.h"
@@ -64,7 +70,7 @@ SDL_Texture* load_texture(const char * texture_name)
     SDL_Surface* loadedSurface = IMG_Load(texture_name); 
     if (loadedSurface == NULL)
     {
-        printf("Unable to load texture: %s error: %s\n", texture_name, SDL_GetError()); 
+        SDL_Log("Unable to load texture: %s error: %s\n", texture_name, SDL_GetError()); 
             exit(0);
     }
     else 
@@ -73,7 +79,7 @@ SDL_Texture* load_texture(const char * texture_name)
 
         if (texture == NULL)
         {
-            printf("Unable to create texture: %s error: %s\n", texture_name, SDL_GetError());
+            SDL_Log("Unable to create texture: %s error: %s\n", texture_name, SDL_GetError());
             exit(0);
         }
         SDL_FreeSurface(loadedSurface);
@@ -85,30 +91,38 @@ SDL_Texture* load_texture(const char * texture_name)
 
 int init_sdl2()
 {
-    window = SDL_CreateWindow("Platforer", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1024, 1024, SDL_WINDOW_SHOWN|SDL_WINDOW_RESIZABLE);
+    SDL_Log("sdl_init start");
+#ifdef ANDROID
+    window = SDL_CreateWindow("Platforer", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 720, 1280, SDL_WINDOW_SHOWN|SDL_WINDOW_RESIZABLE);
+#else
+    window = SDL_CreateWindow("Platforer", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1280, 720, SDL_WINDOW_SHOWN|SDL_WINDOW_RESIZABLE);
+#endif
+    SDL_Log("sdl_init create window");
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    SDL_Log("sdl_init create renderer");
 
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
     {
         return 1;
     }
-    
+    SDL_Log("sdl_init");
+
     int imgFlags = IMG_INIT_PNG;
     if (!(IMG_Init(imgFlags) & imgFlags)) 
     {
-        printf("\nUnable to initialize sdl_image:  %s\n", IMG_GetError());
+        SDL_Log("\nUnable to initialize sdl_image:  %s\n", IMG_GetError());
         return 1;
     }
 
     if (TTF_Init() == -1)
     {
-        printf("\nUnable to initialize sdl_ttf:  %s\n", TTF_GetError());
+        SDL_Log("\nUnable to initialize sdl_ttf:  %s\n", TTF_GetError());
         return 1;
     }
 
     SDL_Surface* icon = IMG_Load("textures/icon.png");
     if (icon == NULL) {
-        printf("\nUnable to load image %s! SDL_image Error: %s\n", "textures/icon.png", IMG_GetError());
+        SDL_Log("\nUnable to load image %s! SDL_image Error: %s\n", "textures/icon.png", IMG_GetError());
         return 1;
     }
     SDL_SetWindowIcon(window, icon);
@@ -120,16 +134,25 @@ int init_sdl2()
 
 void save()
 {
-    FILE * f = fopen("world", "w");
+    SDL_RWops* file = SDL_RWFromFile("world", "wb");
 
-    SDL_Rect img_rect = {};
+    if (!file)
+    {
+        SDL_Log("+++++++++++ FILE SAVE FAILED: FILE CAN'T BE CREATED/OPENED TO WRITE");
+        return;
+    }
+
     struct List * current = world;
     struct Tile * current_tile;
-    char buf[16] = {};
+    int data[3];
     for (;;) {
         current_tile = ((struct Tile *)(current->var));
 
-        fprintf(f, "%d %d %d\n", current_tile->x, current_tile->y, current_tile->id);
+        data[0]=current_tile->x;
+        data[1]=current_tile->y;
+        data[2]=current_tile->id;
+
+        SDL_RWwrite(file, data, sizeof(int), 3);
 
         if (current->next)
             current=current->next;
@@ -137,35 +160,60 @@ void save()
             break;
     }
 
-    fclose(f);
+    SDL_RWclose(file);
 }
 
 void load()
 {
     player.x=2110;
     player.y=2110;
-    FILE * f = fopen("world", "r");
-    int x,y,id;
+
+    SDL_Log("-------------------------------------------- LOAD START");
+
+    SDL_RWops * file = SDL_RWFromFile("world", "rb");
+
+    if (!file) {
+        SDL_Log("--------------------------------------------- NO WORLD FILE: USING DEFAULT");
+        world = List_create();
+        world->var = Tile_create(32,32,0);
+        List_append(world, Tile_create(33, 33, 0));
+        return;
+    }
+    SDL_RWseek(file, 0, RW_SEEK_SET);
+    SDL_Log("-------------------------------------------- HAS FILE");
+    int info[3]; // 0 = x, 1 = y 2 = id
 
     if (world)
     {
         free(world);
     }
     world = List_create();
+    SDL_Log("-------------------------------------------- RECREATES WORLD");
     
-    int status = fscanf(f, "%d %d %d", &x, &y, &id);
+    int status = SDL_RWread(file, info, sizeof(int), 3);
+    SDL_Log("--------------------------------------------  SDL_RWread");
     if (status != 3)
     {
-        fclose(f);
+        SDL_Log("------------------------- EMPTY WORLD FILE: USING DEFAULT");
+        SDL_RWclose(file);
+        world->var = Tile_create(32,32,0);
+        List_append(world, Tile_create(33, 33, 0));
         return;
     }
-    world->var = Tile_create(x, y, id);
+    SDL_Log("-------------------------------------------- LOADING FIRST TILE");
+    world->var = Tile_create(info[0], info[1], info[2]);
+    SDL_Log("-------- %d, %d, %d!!!!", info[0], info[1], info[2]);
+    SDL_Log("-------------------------------------------- LOADED");
 
-    while (fscanf(f, "%d %d %d", &x, &y, &id) == 3) {
-        List_append(world, Tile_create(x, y, id));
+    SDL_Log("-------------------------------------------- STARTING LOAD LOOP");
+    while (SDL_RWread(file, info, sizeof(int), 3) == 3) {
+        List_append(world, Tile_create(info[0], info[1], info[2]));
+        SDL_Log("-------- %d, %d, %d!!!!", info[0], info[1], info[2]);
     }
+    SDL_Log("-------------------------------------------- ENDING LOAD LOOP");
 
-    fclose(f);
+    SDL_RWclose(file);
+    SDL_Log("-------------------------------------------- ENDING LOAD FUNCTION");
 }
 
 
@@ -254,6 +302,16 @@ void draw()
     img_rect = (SDL_Rect){150, 100, 32, 32};
     SDL_Rect src_rect = (SDL_Rect){32*current_tile, 0, 32, 32};
     SDL_RenderCopy(renderer, tile_sheet, &src_rect, &img_rect);
+
+
+#ifdef ANDOIRD
+    // MOBILE OVERLAY
+    // (in_between_normal(x, 10, 100) && in_between(y, 10, 100))
+    SDL_Rect button_rect = {10, 10, 90, 90};
+    SDL_RenderDrawRect(renderer, &button_rect);
+    button_rect = (SDL_Rect){150, 10, 90, 90};
+    SDL_RenderDrawRect(renderer, &button_rect);
+#endif
 }
 
 enum Collision_id
@@ -271,7 +329,14 @@ int in_between(int a, int min)
         return 1;
     return 0;
 }
-int arst=0;
+
+int in_between_normal(int a, int min, int max)
+{
+    if (a >= min && a <= max)
+        return 1;
+    return 0;
+}
+
 enum Collision_id get_collision(SDL_Rect o1, SDL_Rect o2, enum Collision_id filter)
 {
     if ((in_between(o1.x+32, o2.x) || in_between(o1.x+32, o2.x)) && (filter == COLL_down || filter == COLL_no))
@@ -307,8 +372,10 @@ enum Collision_id get_collision(SDL_Rect o1, SDL_Rect o2, enum Collision_id filt
 
 int player_check_tile_collision(enum Collision_id id)
 {
+    SDL_Log("____________ PLAYER_CHECK_TILE_COLLISION");
     if (world->var)
     {
+        SDL_Log("_________ HAS WORLD");
         struct List * current = world;
         struct Tile * current_tile;
         for (;;) {
@@ -329,7 +396,7 @@ int player_check_tile_collision(enum Collision_id id)
         }
     }
     else {
-        printf("No world!\n");
+        SDL_Log("________________________No world!\n");
     }
     return 0;
 }
@@ -359,13 +426,14 @@ struct List * player_tile_collision(enum Collision_id id, enum tiles Tile_ID)
         }
     }
     else {
-        printf("No world!\n");
+        SDL_Log("No world!\n");
     }
     return NULL;
 }
 
 void update(const Uint8 * keys)
 {
+    SDL_Log("-------------- SPEED");
     if (keys[SDL_SCANCODE_LSHIFT])
         player.speed = 5;
     else if (keys[SDL_SCANCODE_LCTRL])
@@ -390,7 +458,9 @@ void update(const Uint8 * keys)
     if (keys[SDL_SCANCODE_S])
         player.y += player.speed;
 
+    SDL_Log("-------------- MOVE DONE");
 
+    SDL_Log("-------------- COLL CHECK");
     if (!player.no_clip)
     {
         if (player_check_tile_collision(COLL_down))
@@ -402,6 +472,7 @@ void update(const Uint8 * keys)
         if (player_check_tile_collision(COLL_left))
             player.x += player.speed;
     }
+    SDL_Log("-------------- COLL DONE");
 }
 
 int main()
@@ -424,12 +495,15 @@ int main()
     Uint32 ct = 0;
     int fc = 0;
 
+    SDL_Log("-------------- MAIN LOOP");
+
     for (;;)
     {
         ct = SDL_GetTicks();
         fc++;
 
         // Keyboard handling by events
+        SDL_Log("-------------- KEYBOARD HANDLE");
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
@@ -479,11 +553,23 @@ int main()
                 SDL_GetWindowSize(window, &win_w, &win_h);
                 if (event.button.button == 1)
                 {
+         #ifdef ANDROID
+                    if (in_between_normal(x, 10, 100) && in_between_normal(y, 10, 100))
+                        player.x-=100;
+                    else if (in_between_normal(x, 150, 240) && in_between_normal(y, 10, 100))
+                        player.x+=100;
+                    else {
+         #endif
+
                     List_append(world,
                                 Tile_create(
                                         (x+player.x-(win_w/2-32))/64,
                                         (y+player.y-(win_h/2-32))/64,
                                     current_tile));
+         #ifdef ANDROID
+                    }
+                    save();
+         #endif
                 }
                 if (event.button.button == 3)
                 {
@@ -526,20 +612,23 @@ int main()
             }
         }
 
-        
+        SDL_Log("-------------- CLEAR");
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
-        
+        SDL_Log("-------------- FPS");
         if (ct > lt + 1000) {
             fps = fc;
             fc = 0;
             lt = ct;
         }
-
+        SDL_Log("-------------- KEY BY STATE");
         // Keyboard handling by states
         const Uint8 * keys = SDL_GetKeyboardState(NULL);
+        SDL_Log("-------------- UPDATE");
         update(keys);
+        SDL_Log("-------------- DRAW");
         draw();
+        SDL_Log("-------------- END MAIN LOOP");
 
         SDL_RenderPresent(renderer);
     }
