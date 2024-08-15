@@ -244,10 +244,11 @@ void draw()
             img_rect.y=current_tile->y*64-player.y+(win_h/2-32);
             img_rect.w=64;
             img_rect.h=64;
-
-            src_rect = (SDL_Rect){32*current_tile->id, 0, 32, 32};
-            SDL_RenderCopy(renderer, tile_sheet, &src_rect, &img_rect);
-
+            if (img_rect.x < win_w && img_rect.y < win_h && img_rect.x > -100 && img_rect.y > -100)
+            {
+                src_rect = (SDL_Rect){32*current_tile->id, 0, 32, 32};
+                SDL_RenderCopy(renderer, tile_sheet, &src_rect, &img_rect);
+            }
             if (current->next)
                 current=current->next;
             else 
