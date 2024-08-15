@@ -31,6 +31,7 @@ int fps = 0;
 
 #ifdef ANDROID
 int HOLD=0;
+int android_mode = 1;
 #endif
 
 SDL_Window *window;
@@ -323,6 +324,25 @@ void draw()
     SDL_RenderCopy(renderer, im_select_texture, NULL, &button_rect);
     button_rect = (SDL_Rect){190, win_h-190, 90, 90};
     SDL_RenderCopy(renderer, im_select_texture, NULL, &button_rect);
+
+    button_rect = (SDL_Rect){win_w-90, 0, 90, 90};
+    SDL_RenderCopy(renderer, im_select_texture, NULL, &button_rect);
+    button_rect = (SDL_Rect){win_w-180, 0, 90, 90};
+    SDL_RenderCopy(renderer, im_select_texture, NULL, &button_rect);
+
+
+    button_rect = (SDL_Rect){win_w-90, win_h-90, 90, 90};
+    SDL_RenderCopy(renderer, im_select_texture, NULL, &button_rect);
+    if (android_mode == 1)
+    {
+        sprintf(text, "place");
+        write_text(win_w-80, win_h-80, text, (SDL_Color){255,255,255,255}, 28, window, renderer);
+    }
+    if (android_mode == 3)
+    {
+        sprintf(text, "break");
+        write_text(win_w-80, win_h-80, text, (SDL_Color){255,255,255,255}, 28, window, renderer);
+    }
 #endif
 }
 
@@ -595,16 +615,40 @@ int main()
                 SDL_GetWindowSize(window, &win_w, &win_h);
                 if (event.button.button == 1)
                 {
-         #ifdef ANDROID
+                    #ifdef ANDROID
+                    if (in_between_normal(x, win_w-90, win_w) && in_between_normal(y, 0, 90))
+                    {
+                        current_tile++;
+                        if (current_tile==TILE_max)
+                            current_tile = 0;
+                    }
+                    if (in_between_normal(x, win_w-180, win_w-90) && in_between_normal(y, 0, 90))
+                    {
+                        current_tile--;
+                        if (current_tile==-1)
+                            current_tile=TILE_max-1;
+                    }
+                    if (in_between_normal(x, win_w-90, win_w) && in_between_normal(y, win_w-90, win_w))
+                    {
+                        if (android_mode == 1)
+                            android_mode = 3;
+                        else if (android_mode == 3)
+                            android_mode = 1;
+                    }
                     HOLD=1;
                     if (!(
                         (in_between_normal(x, 10, 10+90) && in_between_normal(y, win_h-190, win_h-190+90)) ||
                         (in_between_normal(x, 100, 100+90) && in_between_normal(y, win_h-100, win_h-100+90)) ||
                         (in_between_normal(x, 100, 100+90) && in_between_normal(y, win_h-280, win_h-280+90)) ||
-                        (in_between_normal(x, 190, 190+90) && in_between_normal(y, win_h-180, win_h-180+90)) 
+                        (in_between_normal(x, 190, 190+90) && in_between_normal(y, win_h-180, win_h-180+90)) ||
+                        (in_between_normal(x, win_w-90, win_w) && in_between_normal(y, 0, 90)) || 
+                        (in_between_normal(x, win_w-180, win_w-90) && in_between_normal(y, 0, 90)) ||
+                        (in_between_normal(x, win_w-90, win_w) && in_between_normal(y, win_w-90, win_w))
                     ))
                     {
-         #endif
+                        if (android_mode == 1)
+                        {  
+                    #endif
 
                     List_append(world,
                                 Tile_create(
@@ -612,6 +656,45 @@ int main()
                                         (y+player.y-(win_h/2-32))/64,
                                     current_tile));
          #ifdef ANDROID
+                        }
+                        else if (android_mode == 3)
+                        {
+                            struct List * current = world;
+                            struct Tile * current_tile;
+
+                            while (current->next)
+                                current = current->next;
+                            for (;;) 
+                            {
+                                current_tile = ((struct Tile *)(current->var));
+
+                                if ((current_tile->x == (x+player.x-(win_w/2-32))/64) && (current_tile->y == (y+player.y-(win_h/2-32))/64))
+                                {
+                                    if (current == world)
+                                    {
+                                        world = current->next;
+                                        current = current->next;
+                                        List_delete(current->previous);
+                                    }
+                                    else if (current->next)
+                                    {
+                                        current = current->next;
+                                        List_delete(current->previous);
+                                    }
+                                    else if (current->previous)
+                                    {
+                                        current = current->previous;
+                                        List_delete(current->next);
+                                    }
+                                    break;
+                                }
+
+                                if (current->previous)
+                                    current=current->previous;
+                                else
+                                    break;
+                            }
+                        }
                     }
                     save();
          #endif
