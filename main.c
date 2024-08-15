@@ -29,7 +29,6 @@
 int debug = 0;
 int fps = 0;
 
-#define ANDROID
 #ifdef ANDROID
 int HOLD=0;
 #endif
