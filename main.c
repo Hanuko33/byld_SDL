@@ -230,7 +230,7 @@ void draw()
     int win_h,win_w;
     SDL_GetWindowSize(window, &win_w, &win_h);
     // GAME
-
+    Uint32 ft = SDL_GetTicks()
     // Tile draw
     if (world->var)
     {
@@ -255,6 +255,7 @@ void draw()
                 break;
         }
     }
+    SDL_Log("------ RENDER TIME: %d", SDL_GetTicks()-ft);
 
     // Player draw
     SDL_Rect player_rect = {win_w/2-32, win_h/2-32, 64, 64};
@@ -497,6 +498,7 @@ void update(const Uint8 * keys)
     SDL_Log("-------------- MOVE DONE");
 
     SDL_Log("-------------- COLL CHECK");
+    Uint32 ft = SDL_GetTicks();
     if (!player.no_clip)
     {
         if (player_check_tile_collision(COLL_down))
@@ -508,6 +510,7 @@ void update(const Uint8 * keys)
         if (player_check_tile_collision(COLL_left))
             player.x += player.speed;
     }
+    SDL_Log("--------- COLL TIME: %d", SDL_GetTicks()-ft);
     SDL_Log("-------------- COLL DONE");
 }
 
