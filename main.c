@@ -1,3 +1,6 @@
+#include <SDL2/SDL_events.h>
+#include <SDL2/SDL_keyboard.h>
+#include <SDL2/SDL_mouse.h>
 #ifdef ANDROID
 #include <SDL.h>
 #include <SDL_events.h>
@@ -26,6 +29,10 @@
 int debug = 0;
 int fps = 0;
 
+#define ANDROID
+#ifdef ANDROID
+int HOLD=0;
+#endif
 
 SDL_Window *window;
 SDL_Renderer *renderer;
@@ -306,12 +313,16 @@ void draw()
 
 
 #ifdef ANDROID
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     // MOBILE OVERLAY
-    // (in_between_normal(x, 10, 100) && in_between(y, 10, 100))
-    SDL_Rect button_rect = {10, 10, 90, 90};
-    SDL_RenderDrawRect(renderer, &button_rect);
-    button_rect = (SDL_Rect){150, 10, 90, 90};
-    SDL_RenderDrawRect(renderer, &button_rect);
+    SDL_Rect button_rect = {10, win_h-190, 90, 90};
+    SDL_RenderCopy(renderer, im_select_texture, NULL, &button_rect);
+    button_rect = (SDL_Rect){100, win_h-100, 90, 90};
+    SDL_RenderCopy(renderer, im_select_texture, NULL, &button_rect);
+    button_rect = (SDL_Rect){100, win_h-280, 90, 90};
+    SDL_RenderCopy(renderer, im_select_texture, NULL, &button_rect);
+    button_rect = (SDL_Rect){190, win_h-190, 90, 90};
+    SDL_RenderCopy(renderer, im_select_texture, NULL, &button_rect);
 #endif
 }
 
@@ -431,7 +442,6 @@ struct List * player_tile_collision(enum Collision_id id, enum tiles Tile_ID)
     }
     return NULL;
 }
-
 void update(const Uint8 * keys)
 {
     SDL_Log("-------------- SPEED");
@@ -442,6 +452,31 @@ void update(const Uint8 * keys)
     else
         player.speed = 10;
 
+    #ifdef ANDROID
+    if (HOLD)
+    {
+        int x,y;
+        SDL_GetMouseState(&x, &y);
+
+        int win_h, win_w;
+        SDL_GetWindowSize(window, &win_w, &win_h);
+
+        if (in_between_normal(x, 10, 10+90) && in_between_normal(y, win_h-190, win_h-190+90))
+        {
+            player.x-=player.speed;
+            player.going_right=0;
+        }
+        else if (in_between_normal(x, 190, 190+90) && in_between_normal(y, win_h-190, win_h-190+90))
+        {
+            player.x+=player.speed;
+            player.going_right=1;
+        }
+        else if (in_between_normal(x, 100, 100+90) && in_between_normal(y, win_h-100, win_h-100+90))
+            player.y+=player.speed;
+        else if (in_between_normal(x, 100, 100+90) && in_between_normal(y, win_h-280, win_h-280+90))
+            player.y-=player.speed;
+    }
+    #endif
 
     if (keys[SDL_SCANCODE_D])
     {
@@ -546,6 +581,12 @@ int main()
                         break;
                 }
             }
+         #ifdef ANDROID
+            if (event.type == SDL_MOUSEBUTTONUP && event.button.button == 1)
+            {
+                HOLD=0;
+            }
+         #endif
             if (event.type == SDL_MOUSEBUTTONDOWN)
             {
                 int x, y;
@@ -555,11 +596,14 @@ int main()
                 if (event.button.button == 1)
                 {
          #ifdef ANDROID
-                    if (in_between_normal(x, 10, 100) && in_between_normal(y, 10, 100))
-                        player.x-=100;
-                    else if (in_between_normal(x, 150, 240) && in_between_normal(y, 10, 100))
-                        player.x+=100;
-                    else {
+                    HOLD=1;
+                    if (!(
+                        (in_between_normal(x, 10, 10+90) && in_between_normal(y, win_h-190, win_h-190+90)) ||
+                        (in_between_normal(x, 100, 100+90) && in_between_normal(y, win_h-100, win_h-100+90)) ||
+                        (in_between_normal(x, 100, 100+90) && in_between_normal(y, win_h-280, win_h-280+90)) ||
+                        (in_between_normal(x, 190, 190+90) && in_between_normal(y, win_h-180, win_h-180+90)) 
+                    ))
+                    {
          #endif
 
                     List_append(world,
