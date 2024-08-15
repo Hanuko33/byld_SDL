@@ -628,7 +628,7 @@ int main()
                         if (current_tile==-1)
                             current_tile=TILE_max-1;
                     }
-                    if (in_between_normal(x, win_w-90, win_w) && in_between_normal(y, win_w-90, win_w))
+                    if (in_between_normal(x, win_w-90, win_w) && in_between_normal(y, win_h-90, win_h))
                     {
                         if (android_mode == 1)
                             android_mode = 3;
@@ -643,7 +643,7 @@ int main()
                         (in_between_normal(x, 190, 190+90) && in_between_normal(y, win_h-180, win_h-180+90)) ||
                         (in_between_normal(x, win_w-90, win_w) && in_between_normal(y, 0, 90)) || 
                         (in_between_normal(x, win_w-180, win_w-90) && in_between_normal(y, 0, 90)) ||
-                        (in_between_normal(x, win_w-90, win_w) && in_between_normal(y, win_w-90, win_w))
+                        (in_between_normal(x, win_w-90, win_w) && in_between_normal(y, win_h-90, win_h))
                     ))
                     {
                         if (android_mode == 1)
