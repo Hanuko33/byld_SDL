@@ -27,7 +27,7 @@
 #include "rect.h"
 
 int debug = 0;
-int fps = 0;
+int fps = 60;
 
 #ifdef ANDROID
 int HOLD=0;
@@ -466,11 +466,11 @@ void update(const Uint8 * keys)
 {
     SDL_Log("-------------- SPEED");
     if (keys[SDL_SCANCODE_LSHIFT])
-        player.speed = 5;
+        player.speed = (int)((5*60)/fps);
     else if (keys[SDL_SCANCODE_LCTRL])
-        player.speed = 20;
+        player.speed = (int)((20*60)/fps);
     else
-        player.speed = 10;
+        player.speed = (int)((10*60)/fps);
 
     #ifdef ANDROID
     if (HOLD)
