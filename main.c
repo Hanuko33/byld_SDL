@@ -287,7 +287,7 @@ void draw()
     write_text(10, text_y, text, (SDL_Color){255,255,255,255}, 20, window, renderer);
     text_y+=16;
 
-    sprintf(text, "No clip: %s", player.no_clip ? "YES" : "NO" );
+    sprintf(text, "No clip: %d", player.no_clip);
     write_text(10, text_y, text, (SDL_Color){255,255,255,255}, 20, window, renderer);
     text_y+=16;
 
