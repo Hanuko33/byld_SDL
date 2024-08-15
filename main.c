@@ -26,6 +26,7 @@
 int debug = 0;
 int fps = 0;
 
+
 SDL_Window *window;
 SDL_Renderer *renderer;
 struct Player
@@ -304,7 +305,7 @@ void draw()
     SDL_RenderCopy(renderer, tile_sheet, &src_rect, &img_rect);
 
 
-#ifdef ANDOIRD
+#ifdef ANDROID
     // MOBILE OVERLAY
     // (in_between_normal(x, 10, 100) && in_between(y, 10, 100))
     SDL_Rect button_rect = {10, 10, 90, 90};
