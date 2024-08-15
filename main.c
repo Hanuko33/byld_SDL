@@ -1,6 +1,3 @@
-#include <SDL2/SDL_events.h>
-#include <SDL2/SDL_keyboard.h>
-#include <SDL2/SDL_mouse.h>
 #ifdef ANDROID
 #include <SDL.h>
 #include <SDL_events.h>
@@ -15,6 +12,9 @@
 #include <SDL_image.h>
 #include <SDL_ttf.h>
 #else
+#include <SDL2/SDL_events.h>
+#include <SDL2/SDL_keyboard.h>
+#include <SDL2/SDL_mouse.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_image.h>
