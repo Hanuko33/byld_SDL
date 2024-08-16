@@ -28,9 +28,10 @@
 
 int debug = 0;
 int fps = 60;
+int HOLD=0;
+int RHOLD=0;
 
 #ifdef ANDROID
-int HOLD=0;
 int android_mode = 1;
 #endif
 
@@ -292,10 +293,6 @@ void draw()
     write_text(10, text_y, text, (SDL_Color){255,255,255,255}, 20, window, renderer);
     text_y+=16;
 
-    sprintf(text, "Speed: %s", player.speed==20 ? "2" : player.speed==10 ? "1" : "0.5" );
-    write_text(10, text_y, text, (SDL_Color){255,255,255,255}, 20, window, renderer);
-    text_y+=16;
-
     // Item menu draw
     for (int i = 0; i < TILE_max; i++) {
         SDL_Rect img_rect = {i*32+200, 10, 32, 32};
@@ -462,8 +459,85 @@ struct List * player_tile_collision(enum Collision_id id, enum tiles Tile_ID)
     }
     return NULL;
 }
+
 void update(const Uint8 * keys)
 {
+    int x,y;
+    SDL_GetMouseState(&x, &y);
+    int win_h, win_w;
+    SDL_GetWindowSize(window, &win_w, &win_h);
+    #ifndef ANDROID
+    if (HOLD)
+    {
+        char can_place = 1;
+        struct List * current = world;
+        struct Tile * _current_tile;
+        for (;;)
+        {
+            if (!current)
+                break;
+            _current_tile=(struct Tile *)(current->var);
+            if (!_current_tile)
+                continue;
+
+            if (current->next)
+            {
+                if (_current_tile->x == (x+player.x-(win_w/2-32))/64 && _current_tile->y == (y+player.y-(win_h/2-32))/64 && _current_tile->id == current_tile)
+                    can_place = 0;
+                current=current->next;
+            }
+            else
+                break;
+        }
+        if (can_place)
+        {
+        List_append(world,
+                    Tile_create(
+                            (x+player.x-(win_w/2-32))/64,
+                            (y+player.y-(win_h/2-32))/64,
+                        current_tile));
+        }
+    }
+#endif
+    if (RHOLD)
+    {
+        struct List * current = world;
+        struct Tile * current_tile;
+
+        while (current->next)
+            current = current->next;
+        for (;;) 
+        {
+            current_tile = ((struct Tile *)(current->var));
+
+            if ((current_tile->x == (x+player.x-(win_w/2-32))/64) && (current_tile->y == (y+player.y-(win_h/2-32))/64))
+            {
+                if (current == world)
+                {
+                    world = current->next;
+                    current = current->next;
+                    List_delete(current->previous);
+                }
+                else if (current->next)
+                {
+                    current = current->next;
+                    List_delete(current->previous);
+                }
+                else if (current->previous)
+                {
+                    current = current->previous;
+                    List_delete(current->next);
+                }
+                break;
+            }
+
+            if (current->previous)
+                current=current->previous;
+            else
+                break;
+        }
+    }
+
     SDL_Log("-------------- SPEED");
     if (keys[SDL_SCANCODE_LSHIFT])
         player.speed = (int)((5*60)/fps);
@@ -475,12 +549,6 @@ void update(const Uint8 * keys)
     #ifdef ANDROID
     if (HOLD)
     {
-        int x,y;
-        SDL_GetMouseState(&x, &y);
-
-        int win_h, win_w;
-        SDL_GetWindowSize(window, &win_w, &win_h);
-
         if (in_between_normal(x, 10, 10+90) && in_between_normal(y, win_h-190, win_h-190+90))
         {
             player.x-=player.speed;
@@ -495,6 +563,84 @@ void update(const Uint8 * keys)
             player.y+=player.speed;
         else if (in_between_normal(x, 100, 100+90) && in_between_normal(y, win_h-280, win_h-280+90))
             player.y-=player.speed;
+
+        else if (!(
+            (in_between_normal(x, win_w-90, win_w) && in_between_normal(y, 0, 90)) || 
+            (in_between_normal(x, win_w-180, win_w-90) && in_between_normal(y, 0, 90)) ||
+            (in_between_normal(x, win_w-90, win_w) && in_between_normal(y, win_h-90, win_h))
+        ))
+        {
+            if (android_mode == 1)
+            {
+                char can_place = 1;
+                struct List * current = world;
+                struct Tile * _current_tile;
+                for (;;)
+                {
+                    if (!current)
+                        break;
+                    _current_tile=(struct Tile *)(current->var);
+                    if (!_current_tile)
+                        continue;
+
+                    if (current->next)
+                    {
+                        if (_current_tile->x == (x+player.x-(win_w/2-32))/64 && _current_tile->y == (y+player.y-(win_h/2-32))/64 && _current_tile->id == current_tile)
+                            can_place = 0;
+                        current=current->next;
+                    }
+                    else
+                        break;
+                }
+                if (can_place)
+                {
+                List_append(world,
+                            Tile_create(
+                                    (x+player.x-(win_w/2-32))/64,
+                                    (y+player.y-(win_h/2-32))/64,
+                                current_tile));
+                }
+            }
+            if (android_mode == 3)
+            {
+                struct List * current = world;
+                struct Tile * current_tile;
+
+                while (current->next)
+                    current = current->next;
+                for (;;) 
+                {
+                    current_tile = ((struct Tile *)(current->var));
+
+                    if ((current_tile->x == (x+player.x-(win_w/2-32))/64) && (current_tile->y == (y+player.y-(win_h/2-32))/64))
+                    {
+                        if (current == world)
+                        {
+                            world = current->next;
+                            current = current->next;
+                            List_delete(current->previous);
+                        }
+                        else if (current->next)
+                        {
+                            current = current->next;
+                            List_delete(current->previous);
+                        }
+                        else if (current->previous)
+                        {
+                            current = current->previous;
+                            List_delete(current->next);
+                        }
+                        break;
+                    }
+
+                    if (current->previous)
+                        current=current->previous;
+                    else
+                        break;
+                }
+            }
+            save();
+        }
     }
     #endif
 
@@ -601,12 +747,10 @@ int main()
                         break;
                 }
             }
-         #ifdef ANDROID
+            if (event.type == SDL_MOUSEBUTTONUP && event.button.button == 3)
+                RHOLD=0;
             if (event.type == SDL_MOUSEBUTTONUP && event.button.button == 1)
-            {
                 HOLD=0;
-            }
-         #endif
             if (event.type == SDL_MOUSEBUTTONDOWN)
             {
                 int x, y;
@@ -635,107 +779,12 @@ int main()
                         else if (android_mode == 3)
                             android_mode = 1;
                     }
-                    HOLD=1;
-                    if (!(
-                        (in_between_normal(x, 10, 10+90) && in_between_normal(y, win_h-190, win_h-190+90)) ||
-                        (in_between_normal(x, 100, 100+90) && in_between_normal(y, win_h-100, win_h-100+90)) ||
-                        (in_between_normal(x, 100, 100+90) && in_between_normal(y, win_h-280, win_h-280+90)) ||
-                        (in_between_normal(x, 190, 190+90) && in_between_normal(y, win_h-180, win_h-180+90)) ||
-                        (in_between_normal(x, win_w-90, win_w) && in_between_normal(y, 0, 90)) || 
-                        (in_between_normal(x, win_w-180, win_w-90) && in_between_normal(y, 0, 90)) ||
-                        (in_between_normal(x, win_w-90, win_w) && in_between_normal(y, win_h-90, win_h))
-                    ))
-                    {
-                        if (android_mode == 1)
-                        {  
                     #endif
-
-                    List_append(world,
-                                Tile_create(
-                                        (x+player.x-(win_w/2-32))/64,
-                                        (y+player.y-(win_h/2-32))/64,
-                                    current_tile));
-         #ifdef ANDROID
-                        }
-                        else if (android_mode == 3)
-                        {
-                            struct List * current = world;
-                            struct Tile * current_tile;
-
-                            while (current->next)
-                                current = current->next;
-                            for (;;) 
-                            {
-                                current_tile = ((struct Tile *)(current->var));
-
-                                if ((current_tile->x == (x+player.x-(win_w/2-32))/64) && (current_tile->y == (y+player.y-(win_h/2-32))/64))
-                                {
-                                    if (current == world)
-                                    {
-                                        world = current->next;
-                                        current = current->next;
-                                        List_delete(current->previous);
-                                    }
-                                    else if (current->next)
-                                    {
-                                        current = current->next;
-                                        List_delete(current->previous);
-                                    }
-                                    else if (current->previous)
-                                    {
-                                        current = current->previous;
-                                        List_delete(current->next);
-                                    }
-                                    break;
-                                }
-
-                                if (current->previous)
-                                    current=current->previous;
-                                else
-                                    break;
-                            }
-                        }
-                    }
-                    save();
-         #endif
+                    HOLD=1;
                 }
                 if (event.button.button == 3)
                 {
-                    struct List * current = world;
-                    struct Tile * current_tile;
-
-                    while (current->next)
-                        current = current->next;
-                    for (;;) 
-                    {
-                        current_tile = ((struct Tile *)(current->var));
-
-                        if ((current_tile->x == (x+player.x-(win_w/2-32))/64) && (current_tile->y == (y+player.y-(win_h/2-32))/64))
-                        {
-                            if (current == world)
-                            {
-                                world = current->next;
-                                current = current->next;
-                                List_delete(current->previous);
-                            }
-                            else if (current->next)
-                            {
-                                current = current->next;
-                                List_delete(current->previous);
-                            }
-                            else if (current->previous)
-                            {
-                                current = current->previous;
-                                List_delete(current->next);
-                            }
-                            break;
-                        }
-
-                        if (current->previous)
-                            current=current->previous;
-                        else
-                            break;
-                    }
+                    RHOLD=1;
                 }
             }
         }
