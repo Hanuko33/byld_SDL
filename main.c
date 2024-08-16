@@ -295,18 +295,34 @@ void draw()
 
     // Item menu draw
     for (int i = 0; i < TILE_max; i++) {
-        SDL_Rect img_rect = {i*32+200, 10, 32, 32};
-        SDL_Rect src_rect = (SDL_Rect){32*i, 0, 32, 32};
-        SDL_RenderCopy(renderer, tile_sheet, &src_rect, &img_rect);
+        if (i > 10)
+        {
+            SDL_Rect img_rect = {i*32-152, 42, 32, 32};
+            SDL_Rect src_rect = (SDL_Rect){32*i, 0, 32, 32};
+            SDL_RenderCopy(renderer, tile_sheet, &src_rect, &img_rect);
+        }
+        else
+        {
+            SDL_Rect img_rect = {i*32+200, 10, 32, 32};
+            SDL_Rect src_rect = (SDL_Rect){32*i, 0, 32, 32};
+            SDL_RenderCopy(renderer, tile_sheet, &src_rect, &img_rect);
+        }
     }
-    SDL_Rect img_rect = {current_tile*32+200, 10, 32, 32};
-    SDL_RenderCopy(renderer, im_select_texture, NULL, &img_rect);
-
+    if (current_tile > 10)
+    {
+        SDL_Rect img_rect = {current_tile*32-152, 42, 32, 32};
+        SDL_RenderCopy(renderer, im_select_texture, NULL, &img_rect);
+    }
+    else
+    {
+        SDL_Rect img_rect = {current_tile*32+200, 10, 32, 32};
+        SDL_RenderCopy(renderer, im_select_texture, NULL, &img_rect);
+    }
     // current tile draw
     sprintf(text, "Current tile: ");
     write_text(10, 100, text, (SDL_Color){255,255,255,255}, 20, window, renderer);
-    img_rect = (SDL_Rect){150, 100, 32, 32};
-    SDL_Rect src_rect = (SDL_Rect){32*current_tile, 0, 32, 32};
+    SDL_Rect img_rect = {150, 100, 32, 32};
+    SDL_Rect src_rect = {32*current_tile, 0, 32, 32};
     SDL_RenderCopy(renderer, tile_sheet, &src_rect, &img_rect);
 
 

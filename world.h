@@ -13,6 +13,9 @@ enum tiles
     TILE_flower,
     TILE_dirt,
     TILE_water,
+    TILE_gray_wall,
+    TILE_white_wall,
+    Tile_black_wall,
     TILE_max
 };
 
@@ -27,6 +30,9 @@ static char tile_solid[] = {
     0, // TILE_flower
     0, // TILE_dirt
     0, // TILE_water
+    1, // TILE_gray_wall
+    1, // TILE_white_wall
+    1, // TILE_black_wall
 };
 
 #endif
