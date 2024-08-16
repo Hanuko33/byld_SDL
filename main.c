@@ -11,6 +11,7 @@
 #include <SDL_video.h>
 #include <SDL_image.h>
 #include <SDL_ttf.h>
+#include <SDL_mixer.h>
 #else
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_keyboard.h>
@@ -18,6 +19,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_mixer.h>
 #endif
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,16 +27,15 @@
 #include "list/list.h"
 #include "world.h"
 #include "rect.h"
+#include "sound.h"
 
 int debug = 0;
 int fps = 60;
 int HOLD=0;
 int RHOLD=0;
-
 #ifdef ANDROID
 int android_mode = 1;
 #endif
-
 SDL_Window *window;
 SDL_Renderer *renderer;
 struct Player
@@ -120,6 +121,12 @@ int init_sdl2()
     if (!(IMG_Init(imgFlags) & imgFlags)) 
     {
         SDL_Log("\nUnable to initialize sdl_image:  %s\n", IMG_GetError());
+        return 1;
+    }
+
+    if ( Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0)
+    {
+        SDL_Log("Mix_OpenAudio() failed: %s\n", SDL_GetError());
         return 1;
     }
 
@@ -507,11 +514,12 @@ void update(const Uint8 * keys)
         }
         if (can_place)
         {
-        List_append(world,
-                    Tile_create(
-                            (x+player.x-(win_w/2-32))/64,
-                            (y+player.y-(win_h/2-32))/64,
-                        current_tile));
+            play_sound(tiles_sounds[current_tile]);
+            List_append(world,
+                        Tile_create(
+                                (x+player.x-(win_w/2-32))/64,
+                                (y+player.y-(win_h/2-32))/64,
+                            current_tile));
         }
     }
 #endif
@@ -528,6 +536,7 @@ void update(const Uint8 * keys)
 
             if ((current_tile->x == (x+player.x-(win_w/2-32))/64) && (current_tile->y == (y+player.y-(win_h/2-32))/64))
             {
+                play_sound(tiles_sounds[current_tile->id]);
                 if (current == world)
                 {
                     world = current->next;
@@ -610,6 +619,7 @@ void update(const Uint8 * keys)
                 }
                 if (can_place)
                 {
+                play_sound(tiles_sounds[current_tile]);
                 List_append(world,
                             Tile_create(
                                     (x+player.x-(win_w/2-32))/64,
@@ -630,6 +640,7 @@ void update(const Uint8 * keys)
 
                     if ((current_tile->x == (x+player.x-(win_w/2-32))/64) && (current_tile->y == (y+player.y-(win_h/2-32))/64))
                     {
+                        play_sound(tiles_sounds[current_tile->id]);
                         if (current == world)
                         {
                             world = current->next;
@@ -704,6 +715,7 @@ int main()
         return 1;
     }
     load_font();
+    init_sounds();
     playerr_texture = load_texture("textures/playerr.png");
     playerl_texture = load_texture("textures/playerl.png");
     tile_sheet = load_texture("textures/terrain.png");

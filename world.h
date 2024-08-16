@@ -1,6 +1,6 @@
 #ifndef WORLD_H
 #define WORLD_H
-
+#include "sound.h"
 enum tiles
 {
     TILE_blue_wall,
@@ -33,6 +33,22 @@ static char tile_solid[] = {
     1, // TILE_gray_wall
     1, // TILE_white_wall
     1, // TILE_black_wall
+};
+
+static enum sounds_enum tiles_sounds[] = {
+    SOUND_stone, // TILE_blue_wall
+    SOUND_stone, // TILE_green_wall
+    SOUND_stone, // TILE_orange_wall
+    SOUND_stone, // TILE_pink_wall
+    SOUND_stone, // TILE_red_wall
+    SOUND_stone, // TILE_violet_wall
+    SOUND_stone, // TILE_yellow_wall
+    SOUND_dirt,  // TILE_flower
+    SOUND_dirt,  // TILE_dirt
+    SOUND_max,   // TILE_water
+    SOUND_stone, // TILE_gray_wall
+    SOUND_stone, // TILE_white_wall
+    SOUND_stone  // TILE_black_wall
 };
 
 #endif
