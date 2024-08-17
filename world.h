@@ -15,7 +15,7 @@ enum tiles
     TILE_water,
     TILE_gray_wall,
     TILE_white_wall,
-    Tile_black_wall,
+    TILE_black_wall,
     TILE_max
 };
 
@@ -49,6 +49,22 @@ static enum sounds_enum tiles_sounds[] = {
     SOUND_stone, // TILE_gray_wall
     SOUND_stone, // TILE_white_wall
     SOUND_stone  // TILE_black_wall
+};
+
+static enum tiles tiles_order[] = {
+    TILE_white_wall,
+    TILE_gray_wall,
+    TILE_black_wall,
+    TILE_blue_wall,
+    TILE_green_wall,
+    TILE_red_wall,
+    TILE_pink_wall,
+    TILE_violet_wall,
+    TILE_orange_wall,
+    TILE_yellow_wall,
+    TILE_water,
+    TILE_dirt,
+    TILE_flower
 };
 
 #endif

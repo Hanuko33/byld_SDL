@@ -305,13 +305,13 @@ void draw()
         if (i > 10)
         {
             SDL_Rect img_rect = {i*32-152, 42, 32, 32};
-            SDL_Rect src_rect = (SDL_Rect){32*i, 0, 32, 32};
+            SDL_Rect src_rect = (SDL_Rect){32*tiles_order[i], 0, 32, 32};
             SDL_RenderCopy(renderer, tile_sheet, &src_rect, &img_rect);
         }
         else
         {
             SDL_Rect img_rect = {i*32+200, 10, 32, 32};
-            SDL_Rect src_rect = (SDL_Rect){32*i, 0, 32, 32};
+            SDL_Rect src_rect = (SDL_Rect){32*tiles_order[i], 0, 32, 32};
             SDL_RenderCopy(renderer, tile_sheet, &src_rect, &img_rect);
         }
     }
