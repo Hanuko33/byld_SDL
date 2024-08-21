@@ -329,7 +329,7 @@ void draw()
     sprintf(text, "Current tile: ");
     write_text(10, 100, text, (SDL_Color){255,255,255,255}, 20, window, renderer);
     SDL_Rect img_rect = {150, 100, 32, 32};
-    SDL_Rect src_rect = {32*current_tile, 0, 32, 32};
+    SDL_Rect src_rect = {32*tiles_order[current_tile], 0, 32, 32};
     SDL_RenderCopy(renderer, tile_sheet, &src_rect, &img_rect);
 
 
@@ -519,7 +519,7 @@ void update(const Uint8 * keys)
                         Tile_create(
                                 (x+player.x-(win_w/2-32))/64,
                                 (y+player.y-(win_h/2-32))/64,
-                            current_tile));
+                            tiles_order[current_tile]));
         }
     }
 #endif
@@ -624,7 +624,7 @@ void update(const Uint8 * keys)
                             Tile_create(
                                     (x+player.x-(win_w/2-32))/64,
                                     (y+player.y-(win_h/2-32))/64,
-                                current_tile));
+                                tiles_order[current_tile]));
                 }
             }
             if (android_mode == 3)
