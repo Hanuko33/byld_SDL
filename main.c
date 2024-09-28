@@ -516,7 +516,7 @@ void update(const Uint8 * keys)
         }
         if (can_place)
         {
-            play_sound(tiles_sounds[current_tile]);
+            play_sound(tiles_sounds[tiles_order[current_tile]]);
             List_append(world,
                         Tile_create(
                                 (x+player.x-(win_w/2-32))/64,
@@ -621,7 +621,7 @@ void update(const Uint8 * keys)
                 }
                 if (can_place)
                 {
-                play_sound(tiles_sounds[current_tile]);
+                play_sound(tiles_sounds[tiles_order[current_tile]]);
                 List_append(world,
                             Tile_create(
                                     (x+player.x-(win_w/2-32))/64,
