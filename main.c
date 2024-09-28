@@ -576,25 +576,26 @@ void update(const Uint8 * keys)
     #ifdef ANDROID
     if (HOLD)
     {
-        if (in_between_normal(x, 10, 10+90) && in_between_normal(y, win_h-190, win_h-190+90))
+        if (in_between_normal(x, 10, 100) && in_between_normal(y, win_h-270, win_h-10))
         {
             player.x-=player.speed;
             player.going_right=0;
         }
-        else if (in_between_normal(x, 190, 190+90) && in_between_normal(y, win_h-190, win_h-190+90))
+        if (in_between_normal(x, 190, 280) && in_between_normal(y, win_h-270, win_h-10))
         {
             player.x+=player.speed;
             player.going_right=1;
         }
-        else if (in_between_normal(x, 100, 100+90) && in_between_normal(y, win_h-100, win_h-100+90))
+        if (in_between_normal(x, 10, 280) && in_between_normal(y, win_h-100, win_h-100+90))
             player.y+=player.speed;
-        else if (in_between_normal(x, 100, 100+90) && in_between_normal(y, win_h-280, win_h-280+90))
+        if (in_between_normal(x, 10, 280) && in_between_normal(y, win_h-280, win_h-280+90))
             player.y-=player.speed;
 
-        else if (!(
+        if (!(
             (in_between_normal(x, win_w-90, win_w) && in_between_normal(y, 0, 90)) || 
             (in_between_normal(x, win_w-180, win_w-90) && in_between_normal(y, 0, 90)) ||
-            (in_between_normal(x, win_w-90, win_w) && in_between_normal(y, win_h-90, win_h))
+            (in_between_normal(x, win_w-90, win_w) && in_between_normal(y, win_h-90, win_h)) ||
+            (in_between_normal(x, 10, 280) && in_between_normal(y, win_h-280, win_h-10))
         ))
         {
             if (android_mode == 1)
