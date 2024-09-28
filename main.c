@@ -33,6 +33,7 @@ int debug = 0;
 int fps = 60;
 int HOLD=0;
 int RHOLD=0;
+#define ANDROID
 #ifdef ANDROID
 int android_mode = 1;
 #endif
@@ -350,9 +351,13 @@ void draw()
     button_rect = (SDL_Rect){win_w-180, 0, 90, 90};
     SDL_RenderCopy(renderer, im_select_texture, NULL, &button_rect);
 
+    button_rect = (SDL_Rect){win_w-180, win_h-90, 90, 90};
+    SDL_RenderCopy(renderer, im_select_texture, NULL, &button_rect);
 
     button_rect = (SDL_Rect){win_w-90, win_h-90, 90, 90};
     SDL_RenderCopy(renderer, im_select_texture, NULL, &button_rect);
+    sprintf(text, "noclip");
+    write_text(win_w-180, win_h-80, text, (SDL_Color){255,255,255,255}, 28, window, renderer);
     if (android_mode == 1)
     {
         sprintf(text, "place");
@@ -595,6 +600,7 @@ void update(const Uint8 * keys)
             (in_between_normal(x, win_w-90, win_w) && in_between_normal(y, 0, 90)) || 
             (in_between_normal(x, win_w-180, win_w-90) && in_between_normal(y, 0, 90)) ||
             (in_between_normal(x, win_w-90, win_w) && in_between_normal(y, win_h-90, win_h)) ||
+            (in_between_normal(x, win_w-180, win_w-90) && in_between_normal(y, win_h-90, win_h)) ||
             (in_between_normal(x, 10, 280) && in_between_normal(y, win_h-280, win_h-10))
         ))
         {
@@ -810,6 +816,8 @@ int main()
                         else if (android_mode == 3)
                             android_mode = 1;
                     }
+                    if (in_between_normal(x, win_w-180, win_w-90) && in_between_normal(y, win_h-90, win_h))
+                        player.no_clip ^= 1;
                     #endif
                     HOLD=1;
                 }
