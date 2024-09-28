@@ -612,7 +612,7 @@ void update(const Uint8 * keys)
 
                     if (current->next)
                     {
-                        if (_current_tile->x == (x+player.x-(win_w/2-32))/64 && _current_tile->y == (y+player.y-(win_h/2-32))/64 && _current_tile->id == current_tile)
+                        if (_current_tile->x == (x+player.x-(win_w/2-32))/64 && _current_tile->y == (y+player.y-(win_h/2-32))/64 && _current_tile->id == tiles_order[current_tile])
                             can_place = 0;
                         current=current->next;
                     }
@@ -621,12 +621,12 @@ void update(const Uint8 * keys)
                 }
                 if (can_place)
                 {
-                play_sound(tiles_sounds[tiles_order[current_tile]]);
-                List_append(world,
-                            Tile_create(
-                                    (x+player.x-(win_w/2-32))/64,
-                                    (y+player.y-(win_h/2-32))/64,
-                                tiles_order[current_tile]));
+                    play_sound(tiles_sounds[tiles_order[current_tile]]);
+                    List_append(world,
+                                Tile_create(
+                                        (x+player.x-(win_w/2-32))/64,
+                                        (y+player.y-(win_h/2-32))/64,
+                                    tiles_order[current_tile]));
                 }
             }
             if (android_mode == 3)
